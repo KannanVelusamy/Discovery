@@ -1,0 +1,46 @@
+# Core Web Framework
+httpx>=0.27.0
+python-multipart>=0.0.18
+fastapi>=0.115.2
+starlette<0.50.0,>=0.40.0
+
+# LangGraph and related (core dependencies)
+langgraph>=1.0.0
+langgraph-cli>=0.4.7
+langgraph-sdk>=0.2.9
+langgraph-checkpoint>=2.0.0
+langgraph-checkpoint-sqlite>=2.0.0
+sse-starlette>=2.1.0
+
+# MCP
+mcp>=1.6.0
+
+# OpenTelemetry - Core (aligned versions for compatibility)
+opentelemetry-api>=1.37.0
+opentelemetry-sdk>=1.37.0
+opentelemetry-semantic-conventions>=0.58b0
+opentelemetry-proto>=1.37.0
+
+# OpenTelemetry Exporters
+opentelemetry-exporter-otlp-proto-common>=1.37.0
+opentelemetry-exporter-otlp-proto-http>=1.37.0
+opentelemetry-exporter-otlp-proto-grpc>=1.37.0
+opentelemetry-exporter-otlp>=1.37.0
+
+# OpenTelemetry Instrumentation (aligned versions)
+opentelemetry-instrumentation>=0.58b0
+opentelemetry-util-http>=0.58b0
+opentelemetry-instrumentation-asgi>=0.58b0
+opentelemetry-instrumentation-fastapi>=0.58b0
+
+# Crypto dependencies
+cryptography>=44.0.0
+pyopenssl>=25.0.0
+
+# Gradio (optional - uncomment if needed)
+# gradio>=5.26.0
+
+# LangChain (if needed)
+# langchain>=1.0.0
+# langchain-core>=1.0.0
+
