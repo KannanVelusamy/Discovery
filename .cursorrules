@@ -1,0 +1,161 @@
+# Cursor AI Rules for DPAS Discovery Project
+
+## Project Context
+This is a Next.js + LangGraph application with Azure AD SSO authentication, MCP servers for entitlement and data access, and a conversational AI agent.
+
+## Architecture
+- **Frontend**: Next.js 14+ with TypeScript, NextAuth.js for SSO
+- **Backend**: LangGraph agent with DeepAgents framework
+- **MCP Servers**: Python-based microservices for entitlement and Denodo data access
+- **Authentication**: Azure AD SSO via NextAuth.js
+
+## Key Technologies
+- **DeepAgents**: LangChain's framework for building sophisticated agents with planning, context management, and tool orchestration
+- **LangGraph**: State machine framework for building agent workflows
+- **MCP (Model Context Protocol)**: JSON-RPC based protocol for tool communication
+- **NextAuth.js**: Authentication library for Next.js
+
+## DeepAgents Implementation Guidelines
+
+### When to Use DeepAgents
+Use the `create_deep_agent` function from the `deepagents` library when:
+- Building complex multi-step agent workflows
+- Need automatic planning and task decomposition
+- Require context management across conversations
+- Want built-in middleware for common agent patterns
+
+### DeepAgents API Reference
+```python
+from deepagents import create_deep_agent
+from langchain_openai import ChatOpenAI
+from langchain_core.tools import tool
+from langchain_core.messages import HumanMessage, SystemMessage
+
+# Create agent with DeepAgents (v0.2.5+)
+agent = create_deep_agent(
+    model=ChatOpenAI(model="gpt-4o", temperature=0.7, streaming=True),
+    tools=[list_of_tools],
+    system_prompt="Detailed instructions for the agent",
+    # Optional parameters:
+    # middleware=[],  # Custom middleware for planning, file system, etc.
+    # subagents=[],   # Specialized subagents
+    # context_schema=CustomContextClass,  # Custom context schema
+    # checkpointer=True,  # Enable checkpointing
+)
+
+# The result is a compiled LangGraph Runnable
+result = agent.invoke({
+    "messages": [
+        SystemMessage(content="System instructions"),
+        HumanMessage(content="query")
+    ]
+})
+```
+
+### DeepAgents Features (v0.2.5+)
+1. **Automatic ReAct Loop**: Built-in reasoning and acting cycle
+2. **Tool Execution**: Automatic tool calling and result handling
+3. **Middleware Architecture**: Modular, composable middleware components
+   - TodoListMiddleware for planning
+   - FilesystemMiddleware for file operations
+   - Custom middleware support
+4. **Subagents**: Spawn specialized agents for complex tasks
+5. **Streaming Support**: Built-in streaming for real-time responses
+6. **LangGraph Integration**: Full compatibility with LangGraph features (checkpointing, visualization)
+7. **State Management**: Automatic state handling with optional custom context
+
+## MCP Integration Pattern
+
+### MCP Communication Flow
+1. Initialize MCP server with JSON-RPC `initialize` request
+2. Send tool call with JSON-RPC `tools/call` request
+3. Parse responses (id=0 for init, id=1 for tool call)
+4. Terminate server gracefully after receiving responses
+
+### MCP Tool Wrapper Pattern
+```python
+@tool
+def my_mcp_tool(arg: str) -> str:
+    """Tool description for the agent."""
+    result = call_mcp_tool(
+        MCP_PATH,
+        "tool_name",
+        {"arg": arg}
+    )
+    return json.dumps(result)
+```
+
+## Username Flow
+1. Azure AD SSO → email extracted
+2. `/api/entitlement` extracts username from email
+3. Frontend stores username in localStorage
+4. Thread component retrieves username and sends with each message
+5. Backend agent receives username in `AgentState`
+6. Agent passes username to MCP tools for entitlement checks
+
+## Code Style Guidelines
+- Use TypeScript for frontend code
+- Use Python 3.12+ with type hints for backend
+- Follow PEP 8 for Python code
+- Use async/await for MCP server implementations
+- Add comprehensive logging with emoji prefixes (🔧, ✅, ❌, 🔍, etc.)
+
+## Security Guidelines
+- Always check user entitlements before accessing data
+- Use role-based access control (RBAC) for all data queries
+- Never expose sensitive credentials in logs
+- Validate all user inputs before processing
+
+## Testing Guidelines
+- Test MCP servers independently before integration
+- Use manual test functions in `__main__` blocks
+- Test username flow end-to-end from SSO to MCP
+- Verify role-based access control works correctly
+
+## Documentation Standards
+- Keep all major changes documented in `/docs` folder
+- Use markdown for documentation
+- Include code examples in documentation
+- Document error fixes with context and solution
+
+## Common Patterns
+
+### Agent State Definition
+```python
+from typing import Annotated, TypedDict, Sequence, List
+from langchain_core.messages import BaseMessage
+from langgraph.graph.message import add_messages
+
+class AgentState(TypedDict):
+    messages: Annotated[Sequence[BaseMessage], add_messages]
+    username: str | None
+    user_profile: dict | None
+    roles: List[str] | None
+```
+
+### Tool Definition
+```python
+from langchain_core.tools import tool
+import json
+
+@tool
+def my_tool(param: str) -> str:
+    """
+    Tool description that the agent will see.
+    
+    Args:
+        param: Parameter description
+        
+    Returns:
+        JSON string with results
+    """
+    result = {"data": "value"}
+    return json.dumps(result)
+```
+
+## References
+- DeepAgents Docs: https://docs.langchain.com/oss/python/deepagents/
+- LangGraph Docs: https://langchain-ai.github.io/langgraph/
+- MCP Protocol: https://modelcontextprotocol.io/
+- NextAuth.js: https://next-auth.js.org/
+
